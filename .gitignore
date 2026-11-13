@@ -11,7 +11,3 @@
 # goflare/gotest scratch.
 .build/
 coverage.out
-
-# gotest writes a coverage badge (and a README.md pointing at it when none exists).
-/README.md
-/docs/img/badges.svg
