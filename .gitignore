@@ -1,0 +1,17 @@
+# Local goflare config may hold real IDs; only .env.example is committed.
+.env
+**/.env
+
+# goflare build outputs (generated next to each web/edge/main.go).
+**/web/edge/edge.js
+**/web/edge/edge.wasm
+**/web/edge/*.wasm
+/web/
+
+# goflare/gotest scratch.
+.build/
+coverage.out
+
+# gotest writes a coverage badge (and a README.md pointing at it when none exists).
+/README.md
+/docs/img/badges.svg
