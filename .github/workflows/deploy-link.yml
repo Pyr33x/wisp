@@ -1,0 +1,57 @@
+# Deploys wisp-link when its code, or code it compiles in, changes on main.
+name: Deploy link
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - services/link/**
+      - link/**
+      - shared/**
+      - transport/**
+      - platform/**
+      - cmd/migrate/**
+      - go.mod
+      - go.sum
+      - .github/workflows/deploy-link.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-link
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The goflare action builds web/edge/main.go at the repo root and has no
+      # working-directory input: stage this Worker there. No web/public is
+      # staged, so this is a Worker-only deploy and every path reaches Go.
+      - name: Stage wisp-link at the repo root
+        run: cp -R services/link/web web
+      # Pinned to a full version: a floating @v1 downloads the latest goflare,
+      # whose embedded webtyp.com/cloudflare may no longer match go.mod.
+      - uses: webtyp/goflare@v0.5.69
+        with:
+          worker: wisp-link
+          d1-binding: DB
+          d1-name: wisp-links
+          compatibility-date: '2026-08-01'
+          vars: |
+            BASE_URL=${{ vars.WISP_BASE_URL }}
+          # gotest already ran in the ci job; the action's plain go test is skipped.
+          test: ''
+          # Schema migration through goflare.NewD1Migrator, before the upload.
+          # The action exports D1_DATABASE_ID (from goflare d1-id) for it.
+          pre-deploy: go run ./cmd/migrate -service link
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

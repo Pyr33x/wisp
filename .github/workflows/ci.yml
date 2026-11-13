@@ -1,0 +1,72 @@
+# Tests and wasm size gate for all three Workers. Also called by every deploy
+# workflow, so nothing deploys without passing it.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  GOFLARE_VERSION: v0.5.69   # must embed the webtyp.com/cloudflare version go.mod pins (v0.0.73)
+  GOTEST_VERSION: v0.4.191
+  WASMBROWSERTEST_VERSION: v0.1.109
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install gotest and wasmbrowsertest
+        run: |
+          go install webtyp.com/devflow/cmd/gotest@${GOTEST_VERSION}
+          go install webtyp.com/wasmbrowsertest@${WASMBROWSERTEST_VERSION}
+      # vet + staticcheck style + race + coverage + the //go:build wasm suite in
+      # headless Chrome (preinstalled on ubuntu-latest).
+      - name: gotest
+        run: gotest -no-cache
+
+  size:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [gateway, link, analytics]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install goflare and TinyGo
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/goflare" \
+            "https://github.com/webtyp/goflare/releases/download/${GOFLARE_VERSION}/goflare-linux-amd64"
+          chmod +x "$RUNNER_TEMP/goflare"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          out="$("$RUNNER_TEMP/goflare" tinygo)"
+          bindir="$(printf '%s\n' "$out" | sed -n 's/^TINYGO_BINDIR=//p')"
+          echo "$bindir" >> "$GITHUB_PATH"
+          # TinyGo cannot find its root through a symlinked binary; resolve it.
+          echo "TINYGOROOT=$(dirname "$(dirname "$(readlink -f "$bindir/tinygo")")")" >> "$GITHUB_ENV"
+      # goflare builds web/edge/main.go relative to the working directory and
+      # its GitHub Action has no working-directory input, so every Worker is
+      # staged at the repo root, the same way the deploy workflows do it.
+      - name: Stage ${{ matrix.service }}
+        run: cp -R services/${{ matrix.service }}/web web
+      - name: goflare build
+        env:
+          PROJECT_NAME: wisp-${{ matrix.service }}
+          WORKER_NAME: wisp-${{ matrix.service }}
+        run: goflare build -env /dev/null
+      - name: goflare size
+        env:
+          PROJECT_NAME: wisp-${{ matrix.service }}
+          WORKER_NAME: wisp-${{ matrix.service }}
+        run: goflare size -env /dev/null
