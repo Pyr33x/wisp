@@ -1,3 +1,5 @@
+![Wisp](docs/banner.jpg)
+
 # Wisp
 
 **Wisp** is a URL shortener written in Go and deployed to Cloudflare Workers as WebAssembly. It focuses on staying small, fast, and free — everything fits the Cloudflare Workers Free plan.
