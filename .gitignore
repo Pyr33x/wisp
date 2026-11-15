@@ -11,3 +11,6 @@
 # goflare/gotest scratch.
 .build/
 coverage.out
+
+# gotest writes a coverage badge here.
+/docs/img/
