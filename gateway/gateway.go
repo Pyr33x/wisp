@@ -37,6 +37,7 @@ func (s *Service) Register(r router.Router) {
 	r.Get(shared.PathLinkStats, s.stats).Public()
 	r.Delete(shared.PathLink, s.remove).Public()
 	r.Get(shared.PathRedirect, s.redirect).Public()
+	r.Get(shared.PathRoot, s.page).Public()
 }
 
 func (s *Service) create(ctx router.Context) {

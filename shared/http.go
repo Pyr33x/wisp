@@ -29,6 +29,7 @@ const (
 	PathClick       = "/api/clicks/{code}"
 	PathStats       = "/api/stats/{code}"
 	PathRedirect    = "/{code}"
+	PathRoot        = "/"
 	ParamCode       = "code"
 	PathLinksPrefix = "/api/links/"
 	PathClickPrefix = "/api/clicks/"

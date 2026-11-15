@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wisp — short links</title>
+<meta name="description" content="Wisp is a tiny URL shortener built in Go and deployed on Cloudflare Workers.">
+<meta name="theme-color" content="#ff4f00">
+<link rel="icon" type="image/png" sizes="64x64" href="data:image/png;base64,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">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/jpeg;base64,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P/hprmv3MgSY2sltZqThpLqdSkSqO+Cdx9ga/DOvX/i78afFvxh1aO811ltrC1LfY9PgJ8mEN1Yk8vIR1c/QADivIK/n/wASeMaef5hGWGTVKmmo33d95W6X0suy17H9b+C/hxW4SyicMa08RWalO2qikrRjfra7be120rpXZRRRX50fsQUUUUAf/9bm6KKK/wA8z/YAKKKKACiiigAooooAKKKKACiiigAooooAUda/oE8M/wDIt6T/ANeNt/6KWv5+q9yt/wBpP43WlvFa2/ii4SKFFjRfJtzhVGAMmPPAFfp3htxtg+HZ4mWLpyl7RRty26c292u5+IeNHhlmPGFLBU8vqwg6Lm3zuSvzKNrcsZdtbnpP7a//ACWKD/sC2n/o2evkSup8X+NfFHj3Vhrni6/fUb5YVgEzqikRISVXCBRwWJ6d65avjeJs0p5jmuJx1FNRqSbSe+ve1z9H4KyOtk2RYLK8RJSnSgotxvZtdrpO3qkFFFFeGfUBRRRQAUUUUAf/1+booor/ADzP9gAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/Q5uiiiv8APM/2ACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9Hm6KKK/wA8z/YAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/0ubooor/ADzP9gAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/Z">
+<style>
+:root {
+  --brand: #ff4f00;
+  --brand-ink: #c43c00;
+  --on-brand: #ffffff;
+  --on-brand-soft: rgba(255, 255, 255, .78);
+  --card: #ffffff;
+  --ink: #1d1b19;
+  --ink-soft: #6b625b;
+  --line: #ece5df;
+  --field: #faf7f4;
+  --ok: #0f7a3d;
+  --bad: #b3261e;
+  --radius: 18px;
+  --shadow: 0 1px 0 rgba(0,0,0,.04), 0 18px 40px -18px rgba(90, 30, 0, .45);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand: #f24a00;
+    --brand-ink: #ff7a3d;
+    --card: #1c1917;
+    --ink: #f5f1ed;
+    --ink-soft: #a89f97;
+    --line: #2e2925;
+    --field: #24201d;
+    --ok: #5fd08f;
+    --bad: #ff8a80;
+    --shadow: 0 18px 40px -18px rgba(0,0,0,.7);
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--brand);
+  color: var(--ink);
+  font: 16px/1.5 ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+a { color: inherit; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 28px 16px 48px; }
+
+/* header mark, like the banner's [ cloud GO ] */
+.mark { display: inline-flex; color: var(--on-brand); text-decoration: none; border-radius: 8px; }
+.mark .logo { display: block; width: clamp(120px, 28vw, 168px); height: auto; }
+
+/* hero wordmark */
+.hero { text-align: center; color: var(--on-brand); margin: 44px 0 34px; }
+.word { display: inline-block; position: relative; padding: 22px 0; }
+.word h1 {
+  margin: 0; font-size: clamp(76px, 22vw, 168px); line-height: .9;
+  font-weight: 900; letter-spacing: -.02em;
+}
+.word .tag { position: absolute; font-size: clamp(13px, 2.6vw, 17px); font-weight: 700; color: var(--on-brand-soft); white-space: nowrap; }
+.word .tl { top: 0; left: 2px; }
+.word .br2 { bottom: 0; right: 2px; }
+.hero p { margin: 18px auto 0; max-width: 34ch; color: var(--on-brand-soft); font-weight: 600; }
+
+/* cards */
+.card {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 20px; margin-top: 16px;
+}
+.card h2 { margin: 0 0 12px; font-size: 15px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
+.row { display: flex; gap: 10px; }
+input[type=url], input[type=text] {
+  flex: 1; min-width: 0; height: 52px; padding: 0 16px;
+  font: inherit; color: var(--ink); background: var(--field);
+  border: 2px solid var(--line); border-radius: 14px; outline: none;
+  transition: border-color .15s;
+}
+input:focus { border-color: var(--brand); }
+button {
+  height: 52px; padding: 0 20px; border: 0; border-radius: 14px; cursor: pointer;
+  font: inherit; font-weight: 800; color: var(--on-brand); background: var(--brand);
+  transition: transform .06s, filter .15s, opacity .15s; white-space: nowrap;
+}
+button:hover { filter: brightness(1.06); }
+button:active { transform: translateY(1px); }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid var(--brand-ink); outline-offset: 2px; }
+button[disabled] { opacity: .55; cursor: not-allowed; }
+button.ghost { background: transparent; color: var(--brand-ink); border: 2px solid var(--line); height: 40px; padding: 0 14px; font-size: 14px; }
+
+.msg { min-height: 1.5em; margin: 10px 2px 0; font-size: 14px; font-weight: 600; }
+.msg.bad { color: var(--bad); }
+.msg.ok { color: var(--ok); }
+
+.result {
+  display: none; margin-top: 14px; padding: 14px 16px; border-radius: 14px;
+  background: var(--field); border: 2px dashed var(--line);
+  align-items: center; gap: 12px;
+}
+.result.show { display: flex; }
+.result .short { flex: 1; min-width: 0; }
+.result .short a { font-weight: 800; font-size: 19px; color: var(--brand-ink); text-decoration: none; word-break: break-all; }
+.result .origin { display: block; font-size: 13px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.stat { display: none; margin-top: 14px; align-items: baseline; gap: 10px; }
+.stat.show { display: flex; }
+.stat .n { font-size: 44px; font-weight: 900; line-height: 1; color: var(--brand-ink); }
+.stat .l { color: var(--ink-soft); font-weight: 600; }
+
+.recent-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.recent-head h2 { margin: 0; }
+.list { list-style: none; margin: 8px 0 0; padding: 0; }
+.list li {
+  display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center;
+  padding: 12px 0; border-top: 1px solid var(--line);
+}
+.list li:first-child { border-top: 0; }
+.list .meta { min-width: 0; }
+.list .meta a { font-weight: 800; color: var(--brand-ink); text-decoration: none; }
+.list .meta span { display: block; font-size: 13px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list .clicks { font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; min-width: 4.5ch; }
+.list .clicks small { display: block; font-size: 11px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+.empty { color: var(--ink-soft); font-size: 14px; margin: 6px 0 0; }
+.note { font-size: 12px; color: var(--ink-soft); margin: 10px 0 0; }
+
+footer { text-align: center; margin-top: 30px; color: var(--on-brand-soft); font-size: 14px; font-weight: 700; }
+footer a { color: var(--on-brand); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 520px) {
+  .row { flex-direction: column; }
+  .row input { flex: none; width: 100%; }
+  button { width: 100%; }
+  button.ghost { width: auto; }
+  .result { flex-direction: column; align-items: stretch; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="mark" href="/" aria-label="Wisp home">
+<svg class="logo" viewBox="0 0 214 67" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cloudflare and Go">
+<path d="M75.5738 48.1657C75.972 46.7973 75.8189 45.5448 75.1545 44.6141C74.548 43.7598 73.5223 43.2668 72.2884 43.2087L48.9086 42.9055C48.8372 42.9066 48.7667 42.8895 48.7037 42.8558C48.6407 42.8221 48.5874 42.773 48.5486 42.713C48.4722 42.5996 48.4539 42.4468 48.4919 42.2937C48.567 42.0669 48.7952 41.893 49.0417 41.872L72.6286 41.5688C75.4234 41.4367 78.4609 39.1744 79.5236 36.402L80.8709 32.8885C80.9289 32.7371 80.95 32.584 80.9106 32.4349C79.3918 25.5599 73.2561 20.4326 65.9258 20.4326C59.1653 20.4326 53.4292 24.8004 51.3793 30.8584C50.049 29.8707 48.3588 29.3396 46.5355 29.5111C43.2885 29.8324 40.686 32.4352 40.3631 35.6822C40.2866 36.5192 40.3444 37.3368 40.5345 38.096C35.2344 38.2467 31 42.5786 31 47.9154C31 48.3873 31.0383 48.8644 31.095 49.3391C31.1331 49.5632 31.3229 49.7373 31.5511 49.7373H74.7008C74.9463 49.7373 75.1755 49.5632 75.2495 49.318L75.5738 48.1657ZM83.0171 33.1445C82.809 33.1445 82.5821 33.1445 82.3737 33.1747C82.2209 33.1747 82.0891 33.2868 82.0308 33.4382L81.1188 36.6091C80.7205 37.9775 80.8709 39.23 81.5354 40.1634C82.1445 41.0177 83.1702 41.508 84.4041 41.5661L89.3821 41.872C89.5325 41.872 89.667 41.943 89.7409 42.0618C89.8173 42.1779 89.8357 42.3518 89.7987 42.4835C89.7223 42.7103 89.4931 42.8845 89.2479 42.9028L84.0612 43.206C81.2505 43.3378 78.2341 45.6001 77.1689 48.3738L76.7893 49.3418C76.7129 49.5343 76.8474 49.7241 77.0555 49.7241H94.8693C95.0775 49.7241 95.2673 49.5921 95.3256 49.3839C95.6286 48.2818 95.8 47.124 95.8 45.9271C95.8 38.9003 90.0625 33.1642 83.0171 33.1642" fill="currentColor"/>
+<path d="M109.095 29.4249C108.945 29.4249 108.91 29.3513 108.983 29.2361L109.77 28.2281C109.844 28.1161 110.03 28.0425 110.18 28.0425H123.53C123.678 28.0425 123.716 28.1545 123.642 28.2665L123.006 29.2361C122.932 29.3513 122.743 29.4601 122.631 29.4601L109.095 29.4249ZM103.45 32.8649C103.3 32.8649 103.262 32.7913 103.338 32.6793L104.122 31.6681C104.196 31.5561 104.385 31.4825 104.535 31.4825H121.585C121.735 31.4825 121.809 31.5945 121.77 31.7065L121.473 32.6025C121.434 32.7529 121.287 32.8265 121.137 32.8265L103.45 32.8649ZM112.5 36.3049C112.35 36.3049 112.311 36.1929 112.388 36.0809L112.91 35.1465C112.983 35.0345 113.134 34.9225 113.284 34.9225H120.762C120.913 34.9225 120.986 35.0345 120.986 35.1849L120.913 36.0809C120.913 36.2313 120.762 36.3433 120.65 36.3433L112.5 36.3049ZM151.313 28.7529C148.958 29.3513 147.348 29.7993 145.031 30.3977C144.468 30.5449 144.433 30.5833 143.943 30.0233C143.386 29.3865 142.974 28.9769 142.19 28.6025C139.831 27.4441 137.55 27.7801 135.422 29.1625C132.878 30.8073 131.569 33.2393 131.607 36.2665C131.642 39.2585 133.7 41.7257 136.654 42.1385C139.198 42.4745 141.326 41.5785 143.012 39.6745C143.348 39.2585 143.646 38.8105 144.02 38.2857H136.804C136.02 38.2857 135.831 37.7993 136.094 37.1657C136.58 36.0073 137.476 34.0617 138.001 33.0889C138.081 32.9087 138.212 32.7559 138.378 32.6496C138.544 32.5432 138.738 32.4879 138.935 32.4905H152.545C152.471 33.5017 152.471 34.5097 152.321 35.5209C151.933 38.183 150.879 40.7039 149.255 42.8489C146.564 46.4009 143.047 48.6089 138.599 49.2041C134.935 49.6905 131.53 48.9801 128.542 46.7401C125.774 44.6441 124.202 41.8761 123.793 38.4361C123.306 34.3593 124.503 30.6953 126.97 27.4793C129.626 24.0041 133.14 21.7961 137.441 21.0153C140.954 20.3753 144.321 20.7913 147.348 22.8425C149.332 24.1545 150.75 25.9465 151.687 28.1161C151.911 28.4521 151.761 28.6409 151.313 28.7561M163.69 49.4313C160.286 49.3545 157.182 48.3817 154.564 46.1385C152.386 44.3032 150.951 41.7384 150.526 38.9225C149.854 34.6985 151.012 30.9577 153.556 27.6297C156.286 24.0393 159.575 22.1705 164.026 21.3897C167.841 20.7177 171.431 21.0857 174.682 23.2937C177.636 25.3097 179.47 28.0425 179.956 31.6297C180.59 36.6793 179.134 40.7913 175.655 44.3081C173.188 46.8137 170.158 48.3817 166.679 49.0921C165.671 49.2841 164.663 49.3161 163.69 49.4313ZM172.586 34.3273C172.551 33.8377 172.551 33.4633 172.478 33.0889C171.806 29.3865 168.401 27.2969 164.849 28.1161C161.37 28.9001 159.127 31.1081 158.305 34.6217C157.633 37.5401 159.054 40.4937 161.745 41.6937C163.802 42.5897 165.857 42.4745 167.841 41.4697C170.794 39.9337 172.401 37.5401 172.59 34.3241L172.586 34.3273Z" fill="currentColor"/>
+<path d="M202.105 57.544H194.665V51.256H201.289V21.256H194.953V14.776H202.105C204.345 14.776 205.945 15.32 206.905 16.408C207.865 17.496 208.345 18.968 208.345 20.824V51.544C208.345 53.368 207.865 54.824 206.905 55.912C205.945 57 204.345 57.544 202.105 57.544Z" fill="currentColor"/>
+<path d="M18 57.544H10.512C8.304 57.544 6.72 57 5.76 55.912C4.8 54.824 4.32 53.368 4.32 51.544V20.824C4.32 18.968 4.8 17.496 5.76 16.408C6.72 15.32 8.304 14.776 10.512 14.776H17.664V21.256H11.328V51.256H18V57.544Z" fill="currentColor"/>
+</svg>
+  </a>
+
+  <header class="hero">
+    <div class="word">
+      <span class="tag tl">built in go</span>
+      <h1>WISP</h1>
+      <span class="tag br2">deployed on workers</span>
+    </div>
+    <p>Paste a long link, get a short one. Clicks are counted, nothing else is tracked.</p>
+  </header>
+
+  <main>
+    <section class="card" aria-labelledby="h-shorten">
+      <h2 id="h-shorten">Shorten</h2>
+      <form id="shorten" novalidate>
+        <div class="row">
+          <label class="sr" for="url">Long URL</label>
+          <input id="url" name="url" type="url" inputmode="url" autocomplete="off" spellcheck="false"
+                 placeholder="https://example.com/a/very/long/link" required maxlength="2048">
+          <button id="go" type="submit">Shorten</button>
+        </div>
+        <p id="shorten-msg" class="msg" role="status" aria-live="polite"></p>
+      </form>
+      <div id="result" class="result" aria-live="polite">
+        <div class="short">
+          <a id="short" href="#" target="_blank" rel="noopener noreferrer"></a>
+          <span id="origin" class="origin"></span>
+        </div>
+        <button id="copy" type="button">Copy</button>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="h-stats">
+      <h2 id="h-stats">Click stats</h2>
+      <form id="stats" novalidate>
+        <div class="row">
+          <label class="sr" for="code">Short link or code</label>
+          <input id="code" name="code" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="wisp.pyr33x.top/aZ3k9Qx or aZ3k9Qx">
+          <button type="submit">Look up</button>
+        </div>
+        <p id="stats-msg" class="msg" role="status" aria-live="polite"></p>
+      </form>
+      <div id="stat" class="stat" aria-live="polite">
+        <span id="stat-n" class="n">0</span><span id="stat-l" class="l">clicks</span>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="h-recent">
+      <div class="recent-head">
+        <h2 id="h-recent">Your recent links</h2>
+        <button id="refresh" class="ghost" type="button" hidden>Refresh counts</button>
+      </div>
+      <ul id="list" class="list"></ul>
+      <p id="empty" class="empty">Links you shorten here will show up in this list.</p>
+      <p class="note">Saved only in this browser. Clearing site data removes the list, not the links.</p>
+    </section>
+  </main>
+
+  <footer>
+    built in go · deployed on workers · <a href="https://github.com/Pyr33x/wisp" rel="noopener">source</a>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var KEY = "wisp.recent";
+  var MAX = 10;
+  var CODE = /^[0-9A-Za-z]{7}$/;
+
+  function $(id) { return document.getElementById(id); }
+
+  function say(el, text, kind) {
+    el.textContent = text || "";
+    el.className = "msg" + (kind ? " " + kind : "");
+  }
+
+  // Storage can be blocked (private mode, disabled site data): the page must
+  // work without it, so every access is guarded.
+  function load() {
+    try {
+      var v = JSON.parse(localStorage.getItem(KEY) || "[]");
+      return Array.isArray(v) ? v.filter(function (x) { return x && CODE.test(x.code); }) : [];
+    } catch (e) { return []; }
+  }
+  function save(list) {
+    try { localStorage.setItem(KEY, JSON.stringify(list.slice(0, MAX))); } catch (e) {}
+  }
+
+  function api(method, path, body) {
+    var init = { method: method, headers: {} };
+    if (body) {
+      init.headers["Content-Type"] = "application/json";
+      init.body = JSON.stringify(body);
+    }
+    return fetch(path, init).then(function (res) {
+      return res.text().then(function (text) {
+        var data = null;
+        try { data = text ? JSON.parse(text) : null; } catch (e) {}
+        return { status: res.status, data: data, retry: res.headers.get("Retry-After") };
+      });
+    });
+  }
+
+  function errorText(r) {
+    if (r.data && r.data.error && r.data.error.message) {
+      var m = r.data.error.message;
+      return m.charAt(0).toUpperCase() + m.slice(1) + ".";
+    }
+    return "Something went wrong (" + r.status + "). Try again.";
+  }
+
+  function safeHref(u) { return /^https?:\/\//i.test(u) ? u : "#"; }
+
+  // ── shorten ────────────────────────────────────────────────────────────
+  var form = $("shorten"), input = $("url"), go = $("go"), msg = $("shorten-msg");
+  var result = $("result"), shortA = $("short"), originEl = $("origin"), copyBtn = $("copy");
+  var cooldown = 0;
+
+  function lock(seconds) {
+    var left = Math.max(1, parseInt(seconds, 10) || 60);
+    clearInterval(cooldown);
+    go.disabled = true;
+    function tick() {
+      if (left <= 0) {
+        clearInterval(cooldown); go.disabled = false; go.textContent = "Shorten";
+        say(msg, "");
+        return;
+      }
+      go.textContent = "Wait " + left + "s";
+      left--;
+    }
+    tick();
+    cooldown = setInterval(tick, 1000);
+  }
+
+  form.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var url = input.value.trim();
+    if (!url) { say(msg, "Paste a link first.", "bad"); input.focus(); return; }
+    if (!/^https?:\/\//i.test(url)) { url = "https://" + url; }
+    go.disabled = true; go.textContent = "Shortening…"; say(msg, "");
+    api("POST", "/api/links", { url: url }).then(function (r) {
+      if (r.status === 201 && r.data && r.data.code) {
+        shortA.textContent = r.data.short_url.replace(/^https?:\/\//, "");
+        shortA.href = safeHref(r.data.short_url);
+        originEl.textContent = r.data.origin;
+        result.classList.add("show");
+        copyBtn.textContent = "Copy";
+        say(msg, "Done.", "ok");
+        input.value = "";
+        var list = load().filter(function (x) { return x.code !== r.data.code; });
+        list.unshift({ code: r.data.code, short_url: r.data.short_url, origin: r.data.origin, created_at: r.data.created_at });
+        save(list);
+        render();
+        go.disabled = false; go.textContent = "Shorten";
+        return;
+      }
+      if (r.status === 429) {
+        say(msg, errorText(r), "bad");
+        lock(r.retry);
+        return;
+      }
+      say(msg, errorText(r), "bad");
+      go.disabled = false; go.textContent = "Shorten";
+    }).catch(function () {
+      say(msg, "Network error. Check your connection and try again.", "bad");
+      go.disabled = false; go.textContent = "Shorten";
+    });
+  });
+
+  function copy(text, btn) {
+    function done(ok) {
+      btn.textContent = ok ? "Copied!" : "Copy failed";
+      setTimeout(function () { btn.textContent = "Copy"; }, 1600);
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      return;
+    }
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+    done(ok);
+  }
+  copyBtn.addEventListener("click", function () { copy(shortA.href, copyBtn); });
+
+  // ── stats ──────────────────────────────────────────────────────────────
+  var statsForm = $("stats"), codeIn = $("code"), statsMsg = $("stats-msg");
+  var stat = $("stat"), statN = $("stat-n"), statL = $("stat-l");
+
+  function codeOf(text) {
+    var t = text.trim().replace(/[?#].*$/, "").replace(/\/+$/, "");
+    var last = t.slice(t.lastIndexOf("/") + 1);
+    return CODE.test(last) ? last : "";
+  }
+
+  function clicks(code) {
+    return api("GET", "/api/links/" + code + "/stats").then(function (r) {
+      if (r.status === 200 && r.data) { return { ok: true, n: r.data.clicks || 0 }; }
+      return { ok: false, r: r };
+    });
+  }
+
+  statsForm.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var code = codeOf(codeIn.value);
+    stat.classList.remove("show");
+    if (!code) { say(statsMsg, "That doesn't look like a wisp link or 7-character code.", "bad"); return; }
+    say(statsMsg, "Looking up…");
+    clicks(code).then(function (c) {
+      if (c.ok) {
+        statN.textContent = c.n.toLocaleString();
+        statL.textContent = (c.n === 1 ? "click" : "clicks") + " on " + code;
+        stat.classList.add("show");
+        say(statsMsg, "");
+        return;
+      }
+      say(statsMsg, c.r.status === 404 ? "No link with that code (it may have been deleted)." : errorText(c.r), "bad");
+    }).catch(function () { say(statsMsg, "Network error. Try again.", "bad"); });
+  });
+
+  // ── recent ─────────────────────────────────────────────────────────────
+  var listEl = $("list"), empty = $("empty"), refresh = $("refresh");
+
+  function render() {
+    var list = load();
+    listEl.textContent = "";
+    empty.hidden = list.length > 0;
+    refresh.hidden = list.length === 0;
+    list.forEach(function (item) {
+      var li = document.createElement("li");
+
+      var meta = document.createElement("div"); meta.className = "meta";
+      var a = document.createElement("a");
+      a.href = safeHref(item.short_url); a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.textContent = String(item.short_url || "").replace(/^https?:\/\//, "");
+      var o = document.createElement("span"); o.textContent = item.origin || "";
+      meta.appendChild(a); meta.appendChild(o);
+
+      var c = document.createElement("div"); c.className = "clicks";
+      c.dataset.code = item.code;
+      c.textContent = "–";
+      var lbl = document.createElement("small"); lbl.textContent = "clicks";
+      c.appendChild(lbl);
+
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "ghost"; b.textContent = "Copy";
+      b.addEventListener("click", function () { copy(item.short_url, b); });
+
+      li.appendChild(meta); li.appendChild(c); li.appendChild(b);
+      listEl.appendChild(li);
+    });
+  }
+
+  function refreshCounts() {
+    var cells = listEl.querySelectorAll(".clicks");
+    var gone = [];
+    var jobs = Array.prototype.map.call(cells, function (cell) {
+      var code = cell.dataset.code;
+      return clicks(code).then(function (c) {
+        var label = cell.querySelector("small");
+        if (c.ok) { cell.firstChild.nodeValue = c.n.toLocaleString(); }
+        else if (c.r.status === 404) { cell.firstChild.nodeValue = "gone"; gone.push(code); }
+        else { cell.firstChild.nodeValue = "?"; }
+        cell.appendChild(label);
+      }).catch(function () {});
+    });
+    return Promise.all(jobs).then(function () {
+      if (gone.length) { save(load().filter(function (x) { return gone.indexOf(x.code) < 0; })); }
+    });
+  }
+
+  refresh.addEventListener("click", function () {
+    refresh.disabled = true;
+    refreshCounts().then(function () { refresh.disabled = false; });
+  });
+
+  render();
+  // Counts load on demand only: each lookup costs Worker requests from the
+  // free-plan quota, so the page never fans out stats calls on its own.
+})();
+</script>
+</body>
+</html>
