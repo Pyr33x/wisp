@@ -3,7 +3,7 @@ name: Deploy gateway
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - services/gateway/**
       - gateway/**

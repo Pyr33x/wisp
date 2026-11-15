@@ -3,7 +3,7 @@ name: Deploy analytics
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - services/analytics/**
       - analytics/**
