@@ -14,7 +14,8 @@
 - 📊 **Analytics**: Click counting with a single atomic upsert per redirect
 - 🛡️ **Abuse protection**: Per-IP rate limiting on link creation, URL validation, redirect-loop detection
 - 🔐 **Internal auth**: Internal Workers reject any request without the shared `X-Wisp-Internal` secret
-- 🪶 **Small**: ~225–245 KiB of wasm per Worker (~75–80 KiB gzipped)
+- 🖥️ **Web UI**: Shorten, copy, look up clicks and keep a recent-links list at [wisp.pyr33x.top](https://wisp.pyr33x.top), served by the gateway itself
+- 🪶 **Small**: ~225–265 KiB of wasm per Worker (~75–95 KiB gzipped)
 
 ## Try It
 
@@ -70,6 +71,7 @@ go install webtyp.com/devflow/cmd/gotest@v0.4.191
 
 | Method | Path | Description | Responses |
 |---|---|---|---|
+| `GET` | `/` | Web UI | `200` |
 | `POST` | `/api/links` | Create a short link from `{"url": "..."}` | `201`, `400`, `429`, `502` |
 | `GET` | `/{code}` | Redirect to the original URL and count the click | `302`, `404`, `502` |
 | `GET` | `/api/links/{code}/stats` | Click count for a link | `200`, `404`, `502` |
@@ -113,7 +115,7 @@ Worker secrets must be type **Secret** in the dashboard — goflare replaces pla
 - **10 creates per minute per IP**, keyed on `CF-Connecting-IP`
 - Exceeding it returns `429` with `Retry-After`
 - If the rate-limit store fails, requests are **allowed** and the failure is logged
-- goflare also adds a zone rule (100 requests / 10 s per IP) to the gateway's domain
+- For flood protection on top, add a Cloudflare rate limiting rule for the gateway's hostname (Security → WAF → Rate limiting rules), e.g. 100 requests / 10 s per IP
 
 ## Testing
 
@@ -157,17 +159,18 @@ Deploys run in GitHub Actions with `webtyp/goflare@v0.5.69`, one workflow per Wo
 
 ### GitHub
 - **Secrets**: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
-- **Variables**: `WISP_DOMAIN`, `WISP_BASE_URL`, `WISP_LINK_URL`, `WISP_ANALYTICS_URL`
+- **Variables**: `WISP_BASE_URL`, `WISP_LINK_URL`, `WISP_ANALYTICS_URL`
+- **Optional variable** `WISP_DOMAIN`: set it for one gateway deploy to attach the custom domain, then delete it. While it is set, goflare also manages a zone rate-limit rule, and that step fails with account-owned (`cfat_…`) tokens
 
 ### Cloudflare
 1. Add a domain to the account and pick the gateway hostname (e.g. `wisp.pyr33x.top`)
 2. Create D1 databases `wisp-links`, `wisp-analytics`, `wisp-gateway`
 3. Create an API token with:
    - Account: **Workers Scripts Edit**, **D1 Edit**
-   - Zone (your domain): **Zone Read**, **Workers Routes Edit**, **Zone WAF Edit**
+   - Zone (your domain), only while `WISP_DOMAIN` is set: **Zone Read**, **Workers Routes Edit**, **Zone WAF Edit**
 4. Create the three Workers and add their secrets (`INTERNAL_SECRET` on all, `ADMIN_TOKEN` on the gateway) **before** the first deploy
 5. Keep workers.dev enabled on `wisp-link` and `wisp-analytics`; never put them on the gateway's domain
-6. Deploy link and analytics before the gateway; goflare attaches the domain on the gateway deploy
+6. Deploy link and analytics before the gateway; with `WISP_DOMAIN` set, the gateway deploy attaches the domain (or add it once under the Worker's **Settings → Domains & Routes**)
 
 ### Troubleshooting
 
@@ -176,7 +179,7 @@ Deploys run in GitHub Actions with `webtyp/goflare@v0.5.69`, one workflow per Wo
 | `error code: 1101` on every request | The Worker's `main()` stopped at startup — a missing secret or variable; the Worker logs name it |
 | Gateway returns `502`, link logs show nothing | Gateway is on the same zone as link/analytics (`1042`); serve it from a custom domain |
 | `webtyp/cloudflare version skew` | `go.mod` and the goflare action drifted apart; keep v0.0.73 ↔ v0.5.69 |
-| `rate limit: … HTTP 403` at the end of a gateway deploy | The token lacks zone WAF permission on the gateway's domain; the Worker itself is already live |
+| `rate limit: … HTTP 403` at the end of a gateway deploy | goflare's zone rate-limit step, which rejects account-owned tokens; the Worker is already live. Delete `WISP_DOMAIN` once the domain is attached |
 
 ## Contributing
 Feel free to open issues or submit pull requests. Any help is appreciated!
