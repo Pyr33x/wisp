@@ -406,3 +406,40 @@ func TestWasm_FromEnvFallsBackToURL(t *testing.T) {
 		t.Fatal("no binding and no URL must be a startup error")
 	}
 }
+
+// TestWasm_URLClientCallsFetchWithoutThis guards the production crash where
+// fetch was invoked as a method of js.Global(): inside a goflare Worker that
+// object is a Proxy, and workerd throws "Illegal invocation" for any `this`
+// other than undefined/globalThis. Invoking with an undefined `this` is the
+// only form that works there, so the fake rejects anything else.
+func TestWasm_URLClientCallsFetchWithoutThis(t *testing.T) {
+	var gotThisOK, gotSignal bool
+	var gotURL, gotSecret, gotMethod string
+	fake := js.FuncOf(func(this js.Value, a []js.Value) any {
+		gotThisOK = this.IsUndefined()
+		gotURL = a[0].String()
+		gotMethod = a[1].Get("method").String()
+		gotSecret = a[1].Get("headers").Call("get", shared.HeaderInternal).String()
+		gotSignal = a[1].Get("signal").Type() == js.TypeObject
+		return resolved(js.Global().Get("Response").New(`{"code":"abc1234","clicks":3}`, map[string]any{"status": 200}))
+	})
+	defer fake.Release()
+	orig := js.Global().Get("fetch")
+	js.Global().Set("fetch", fake)
+	defer js.Global().Set("fetch", orig)
+
+	c := transport.NewURLClient("https://wisp-analytics.example.workers.dev/", secret, transport.BestEffortTimeoutMs)
+	var st shared.Stats
+	if _, err := transport.Call(c, "GET", "/api/stats/abc1234", nil, &st); err != nil || st.Clicks != 3 {
+		t.Fatalf("call: %v %+v", err, st)
+	}
+	if !gotThisOK {
+		t.Fatal("fetch was called with a `this`: workerd answers Illegal invocation")
+	}
+	if gotURL != "https://wisp-analytics.example.workers.dev/api/stats/abc1234" || gotMethod != "GET" || gotSecret != secret {
+		t.Fatalf("fetch saw %s %s %q", gotMethod, gotURL, gotSecret)
+	}
+	if !gotSignal {
+		t.Fatal("timeout must travel as an AbortSignal, not a setTimeout")
+	}
+}

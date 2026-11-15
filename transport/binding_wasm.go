@@ -5,11 +5,8 @@ package transport
 import (
 	"syscall/js"
 
-	"webtyp.com/await"
 	"webtyp.com/env"
 	"webtyp.com/fmt"
-
-	"github.com/pyr33x/wisp/shared"
 )
 
 // bindingOrigin is the URL origin used for service-binding requests. The host
@@ -26,32 +23,9 @@ type BindingClient struct {
 }
 
 func (c *BindingClient) Do(method, path string, body []byte) (int, []byte, error) {
-	headers := js.Global().Get("Headers").New()
-	headers.Call("set", shared.HeaderInternal, c.secret)
-	init := js.Global().Get("Object").New()
-	init.Set("method", method)
-	init.Set("headers", headers)
-	if len(body) > 0 && method != MethodGet {
-		headers.Call("set", shared.HeaderContentType, shared.ContentTypeJSON)
-		arr := js.Global().Get("Uint8Array").New(len(body))
-		js.CopyBytesToJS(arr, body)
-		init.Set("body", arr)
-	}
-	if c.timeoutMs > 0 {
-		init.Set("signal", js.Global().Get("AbortSignal").Call("timeout", c.timeoutMs))
-	}
-	resp, err := await.Promise(c.fetcher.Call("fetch", bindingOrigin+path, init))
-	if err != nil {
-		return 0, nil, err
-	}
-	buf, err := await.Promise(resp.Call("arrayBuffer"))
-	if err != nil {
-		return 0, nil, err
-	}
-	arr := js.Global().Get("Uint8Array").New(buf)
-	out := make([]byte, arr.Get("length").Int())
-	js.CopyBytesToGo(out, arr)
-	return resp.Get("status").Int(), out, nil
+	return doFetch(func(url string, init js.Value) js.Value {
+		return c.fetcher.Call("fetch", url, init) // `this` is the binding: correct
+	}, bindingOrigin+path, method, c.secret, body, c.timeoutMs)
 }
 
 // FromEnv picks the transport for one downstream service from configuration:
