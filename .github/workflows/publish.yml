@@ -1,0 +1,69 @@
+# Publishes the exact edge.js + edge.wasm of each Worker to GitHub Packages
+# (ghcr.io) as an OCI artifact, once per release tag. Pull one back with:
+#   oras pull ghcr.io/pyr33x/wisp-gateway:v0.2.4
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  GOFLARE_VERSION: v0.5.69   # must embed the webtyp.com/cloudflare version go.mod pins (v0.0.73)
+  REGISTRY: ghcr.io/pyr33x
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [gateway, link, analytics]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install goflare and TinyGo
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/goflare" \
+            "https://github.com/webtyp/goflare/releases/download/${GOFLARE_VERSION}/goflare-linux-amd64"
+          chmod +x "$RUNNER_TEMP/goflare"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          out="$("$RUNNER_TEMP/goflare" tinygo)"
+          bindir="$(printf '%s\n' "$out" | sed -n 's/^TINYGO_BINDIR=//p')"
+          echo "$bindir" >> "$GITHUB_PATH"
+          # TinyGo cannot find its root through a symlinked binary; resolve it.
+          echo "TINYGOROOT=$(dirname "$(dirname "$(readlink -f "$bindir/tinygo")")")" >> "$GITHUB_ENV"
+      # Same staging as the deploy workflows: goflare builds web/edge/main.go
+      # relative to the working directory.
+      - name: Stage wisp-${{ matrix.service }}
+        run: cp -R services/${{ matrix.service }}/web web
+      - name: goflare build
+        env:
+          PROJECT_NAME: wisp-${{ matrix.service }}
+          WORKER_NAME: wisp-${{ matrix.service }}
+        run: goflare build -env /dev/null
+      - uses: oras-project/setup-oras@v1
+      - name: Push to ghcr.io
+        working-directory: web/edge
+        env:
+          REF: ${{ env.REGISTRY }}/wisp-${{ matrix.service }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
+          # The source annotation links the package to this repository, so it
+          # shows under "Packages" on the repo page.
+          oras push "$REF:$TAG,latest" \
+            --artifact-type application/vnd.wisp.worker.v1 \
+            --annotation "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
+            --annotation "org.opencontainers.image.description=wisp-${{ matrix.service }} Cloudflare Worker (edge.js + edge.wasm)" \
+            --annotation "org.opencontainers.image.version=$TAG" \
+            --annotation "org.opencontainers.image.revision=${{ github.sha }}" \
+            --annotation "org.opencontainers.image.licenses=MIT" \
+            edge.js:application/javascript+module \
+            edge.wasm:application/wasm
+          echo "Published $REF:$TAG" >> "$GITHUB_STEP_SUMMARY"
