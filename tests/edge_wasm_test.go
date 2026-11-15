@@ -347,6 +347,12 @@ func TestWasm_GatewayRoutesOnEdgeRouter(t *testing.T) {
 	g.clicks.answers["POST /api/clicks/abc1234"] = answer{status: 204}
 	r := edgeRouter(g.register)
 
+	page := dispatch(r, request{method: "GET", path: "/"})
+	wantStatus(t, page, 200)
+	if !strings.Contains(string(page.ResponseBody()), `id="shorten"`) {
+		t.Fatal("GET / must serve the page on the edge router")
+	}
+
 	ctx := dispatch(r, request{method: "GET", path: "/abc1234"})
 	wantStatus(t, ctx, 302)
 	if ctx.GetHeader(shared.HeaderLocation) != "https://example.org/page" || ctx.GetHeader(shared.HeaderCacheControl) != "private, max-age=0" {
