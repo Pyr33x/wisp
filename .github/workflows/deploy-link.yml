@@ -30,6 +30,10 @@ jobs:
   deploy:
     needs: ci
     runs-on: ubuntu-latest
+    # Shows up under "Deployments" on the repo page, linking to the live URL.
+    environment:
+      name: link
+      url: ${{ vars.WISP_LINK_URL }}
     steps:
       - uses: actions/checkout@v4
       # The goflare action builds web/edge/main.go at the repo root and has no
