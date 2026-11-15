@@ -3,6 +3,7 @@ package tests
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -75,5 +76,33 @@ func TestPage_IsSelfContained(t *testing.T) {
 		if strings.Contains(html, bad) {
 			t.Fatalf("page must not use %q", bad)
 		}
+	}
+}
+
+// TestPage_HasOpenGraph keeps link previews working: crawlers need absolute
+// https URLs, and the image must be the committed 1200x630 card.
+func TestPage_HasOpenGraph(t *testing.T) {
+	html := gateway.IndexHTML()
+	const img = "https://raw.githubusercontent.com/Pyr33x/wisp/master/docs/og.jpg"
+	for _, want := range []string{
+		`<meta property="og:title" content="`,
+		`<meta property="og:description" content="`,
+		`<meta property="og:url" content="https://wisp.pyr33x.top/">`,
+		`<meta property="og:image" content="` + img + `">`,
+		`<meta property="og:image:width" content="1200">`,
+		`<meta property="og:image:height" content="630">`,
+		`<meta name="twitter:card" content="summary_large_image">`,
+		`<meta name="twitter:image" content="` + img + `">`,
+	} {
+		if !strings.Contains(html, want) {
+			t.Fatalf("page is missing %s", want)
+		}
+	}
+	info, err := os.Stat("../docs/og.jpg")
+	if err != nil {
+		t.Fatalf("og:image points at docs/og.jpg, which must be committed: %v", err)
+	}
+	if info.Size() > 300*1024 {
+		t.Fatalf("docs/og.jpg is %d bytes; keep it under 300 KB or WhatsApp drops the preview", info.Size())
 	}
 }
